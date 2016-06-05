@@ -44,7 +44,7 @@ class GenerateAnimationButton(bpy.types.Operator):
         if "ManualFPS" in fields.keys() and fields["ManualFPS"] and "FPS" in fields.keys():
             fps = fields["FPS"]
 
-        generate(file, fps)
+        generate(bpy.path.abspath(file), fps)
 
         return {'FINISHED'}
 
