@@ -23,7 +23,7 @@ class KeypointHandler(ContentHandler):
                 self.current_frame = self.datacontainer.add_frame()
 
         elif name == "point":
-            self.current_frame.add_point(attrs.getValue("x"), attrs.getValue("y"))
+            self.current_frame.add_point(int(attrs.getValue("x")), int(attrs.getValue("y")))
 
     def endElement(self, name):
         if name == "initial":
