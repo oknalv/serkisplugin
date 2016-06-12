@@ -307,28 +307,52 @@ class Controller:
 
     def move_single_eyebrow(self, inner_eyebrow_point, middle_eyebrow_point,
                             outer_eyebrow_point, inner_eyebrow, middle_eyebrow, outer_eyebrow):
+        inner_eyebrow.rotation_euler.zero()
+        middle_eyebrow.rotation_euler.zero()
+        outer_eyebrow.rotation_euler.zero()
         inner_eyebrow_vertical_end_limit = -4
         inner_eyebrow_vertical_start_limit = 2
+        middle_eyebrow_vertical_end_limit = 4
+        middle_eyebrow_vertical_start_limit = -5
+        outer_eyebrow_vertical_end_limit = 4
+        outer_eyebrow_vertical_start_limit = -2
         self.move_single_point(inner_eyebrow_point, inner_eyebrow,
-                               inner_eyebrow_vertical_start_limit, inner_eyebrow_vertical_end_limit)
-        middle_eyebrow_vertical_end_limit = -4
-        middle_eyebrow_vertical_start_limit = 2
+                               inner_eyebrow_vertical_start_limit, inner_eyebrow_vertical_end_limit, "X")
         self.move_single_point(middle_eyebrow_point, middle_eyebrow,
-                               middle_eyebrow_vertical_start_limit, middle_eyebrow_vertical_end_limit)
-        outer_eyebrow_vertical_end_limit = -4
-        outer_eyebrow_vertical_start_limit = 2
+                               middle_eyebrow_vertical_start_limit, middle_eyebrow_vertical_end_limit, "X")
         self.move_single_point(outer_eyebrow_point, outer_eyebrow,
-                               outer_eyebrow_vertical_start_limit, outer_eyebrow_vertical_end_limit)
+                               outer_eyebrow_vertical_start_limit, outer_eyebrow_vertical_end_limit, "X")
+        inner_eyebrow_horizontal_end_limit = 0
+        inner_eyebrow_horizontal_start_limit = -1
+        middle_eyebrow_horizontal_end_limit = -1
+        middle_eyebrow_horizontal_start_limit = 2
+        outer_eyebrow_horizontal_end_limit = -1
+        outer_eyebrow_horizontal_start_limit = 1
+        self.move_single_point(inner_eyebrow_point, inner_eyebrow,
+                               inner_eyebrow_horizontal_start_limit, inner_eyebrow_horizontal_end_limit, "Z")
+        self.move_single_point(middle_eyebrow_point, middle_eyebrow,
+                               middle_eyebrow_horizontal_start_limit, middle_eyebrow_horizontal_end_limit, "Z")
+        self.move_single_point(outer_eyebrow_point, outer_eyebrow,
+                               outer_eyebrow_horizontal_start_limit, outer_eyebrow_horizontal_end_limit, "Z")
+        inner_eyebrow.keyframe_insert("rotation_euler")
+        middle_eyebrow.keyframe_insert("rotation_euler")
+        outer_eyebrow.keyframe_insert("rotation_euler")
 
-    def move_single_point(self, point, bone, vertical_start_limit, vertical_end_limit):
-        bone.rotation_euler.zero()
-        current_vertical_distance = Point.get_vertical_distance(
+    def move_single_point(self, point, bone, vertical_start_limit, vertical_end_limit, axis):
+        current_distance = Point.get_vertical_distance(
+            self.current_points[self.reference_point],
+            self.current_points[point]) if axis == "X" else Point.get_horizontal_distance(
             self.current_points[self.reference_point],
             self.current_points[point])
-        initial_vertical_distance = Point.get_vertical_distance(
+        initial_distance = Point.get_vertical_distance(
+            self.data_container.initial.points[self.reference_point],
+            self.data_container.initial.points[point]) if axis == "X" else Point.get_horizontal_distance(
             self.data_container.initial.points[self.reference_point],
             self.data_container.initial.points[point])
-        # vertical_movement_angles =
+        vertical_movement_angles = self.get_rotation_angles(vertical_end_limit, vertical_start_limit,
+                                                            current_distance, initial_distance)
+        bone.rotation_euler.rotate_axis(axis, math.radians(vertical_start_limit))
+        bone.rotation_euler.rotate_axis(axis, math.radians(vertical_movement_angles))
 
     def move_eyes(self):
         # right eye, points 37 and 41
