@@ -1,5 +1,6 @@
 from xml import sax as sax
 import bpy
+import math
 
 from ..lib.datacontainer import DataContainer
 from ..lib.datacontainer import Point
@@ -48,6 +49,7 @@ class Controller:
         self.data_container = DataContainer()
         self.current_points = None
         self.previous_points = None
+        self.reference_point = 27
 
     def generate(self, file, fps=None):
         parser = sax.make_parser()
@@ -67,136 +69,12 @@ class Controller:
             if current_frame.points:
                 self.current_points = current_frame.points
                 self.previous_points = previous_frame.points
-
                 self.move_eyes()
+                self.move_eyebrows()
+                self.move_jaw()
+                self.move_lips()
+
                 """
-                ################# JAW #########################
-                # 27 8 distance from nose to jaw
-                jaw_current_aperture = Point.get_vertical_distance(current_points[27], current_points[8])
-                jaw_previous_aperture = Point.get_vertical_distance(previous_points[27], previous_points[8])
-                if jaw_current_aperture != jaw_previous_aperture:
-                    jaw_aperture_difference = jaw_current_aperture - jaw_previous_aperture
-                    jaw.rotation_euler.rotate_axis("X", jaw_aperture_difference / 100)
-                    jaw.keyframe_insert("rotation_euler")
-
-                ################# RIGHT EYEBROW #########################
-                # 21 27
-                right_eyebrow_in_current_vertical_movement = Point.get_vertical_distance(current_points[21], current_points[27])
-                right_eyebrow_in_previous_vertical_movement = Point.get_vertical_distance(previous_points[21], previous_points[27])
-                right_eyebrow_in_current_horizontal_movement = Point.get_horizontal_distance(current_points[21], current_points[27])
-                right_eyebrow_in_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[21], previous_points[27])
-                if right_eyebrow_in_current_vertical_movement != right_eyebrow_in_previous_vertical_movement:
-                    right_eyebrow_in_vertical_movement_difference = right_eyebrow_in_current_vertical_movement - right_eyebrow_in_previous_vertical_movement
-                    eyebrow_R_001.rotation_euler.rotate_axis("X", right_eyebrow_in_vertical_movement_difference / 100)
-                    rotated_flag = True
-
-                if right_eyebrow_in_current_horizontal_movement != right_eyebrow_in_previous_horizontal_movement:
-                    right_eyebrow_in_horizontal_movement_difference = right_eyebrow_in_current_horizontal_movement - right_eyebrow_in_previous_horizontal_movement
-                    eyebrow_R_001.rotation_euler.rotate_axis("Z", right_eyebrow_in_horizontal_movement_difference / 100)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    eyebrow_R_001.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                # 19 27
-                right_eyebrow_middle_current_vertical_movement = Point.get_vertical_distance(current_points[19], current_points[27])
-                right_eyebrow_middle_previous_vertical_movement = Point.get_vertical_distance(previous_points[19], previous_points[27])
-                right_eyebrow_middle_current_horizontal_movement = Point.get_horizontal_distance(current_points[19], current_points[27])
-                right_eyebrow_middle_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[19], previous_points[27])
-                if right_eyebrow_middle_current_vertical_movement != right_eyebrow_middle_previous_vertical_movement:
-                    right_eyebrow_middle_vertical_movement_difference = right_eyebrow_middle_current_vertical_movement - right_eyebrow_middle_previous_vertical_movement
-                    eyebrow_R_002.rotation_euler.rotate_axis("X", right_eyebrow_middle_vertical_movement_difference / 100)
-                    rotated_flag = True
-
-                if right_eyebrow_middle_current_horizontal_movement != right_eyebrow_middle_previous_horizontal_movement:
-                    right_eyebrow_middle_horizontal_movement_difference = right_eyebrow_middle_current_horizontal_movement - right_eyebrow_middle_previous_horizontal_movement
-                    eyebrow_R_002.rotation_euler.rotate_axis("Z", right_eyebrow_middle_horizontal_movement_difference / 100)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    eyebrow_R_002.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                # 17 27
-                right_eyebrow_out_current_vertical_movement = Point.get_vertical_distance(current_points[17], current_points[27])
-                right_eyebrow_out_previous_vertical_movement = Point.get_vertical_distance(previous_points[17], previous_points[27])
-                right_eyebrow_out_current_horizontal_movement = Point.get_horizontal_distance(current_points[17], current_points[27])
-                right_eyebrow_out_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[17], previous_points[27])
-                if right_eyebrow_out_current_vertical_movement != right_eyebrow_out_previous_vertical_movement:
-                    right_eyebrow_out_vertical_movement_difference = right_eyebrow_out_current_vertical_movement - right_eyebrow_out_previous_vertical_movement
-                    eyebrow_R_003.rotation_euler.rotate_axis("X", right_eyebrow_out_vertical_movement_difference / 100)
-                    rotated_flag = True
-
-                if right_eyebrow_out_current_horizontal_movement != right_eyebrow_out_previous_horizontal_movement:
-                    right_eyebrow_out_horizontal_movement_difference = right_eyebrow_out_current_horizontal_movement - right_eyebrow_out_previous_horizontal_movement
-                    eyebrow_R_003.rotation_euler.rotate_axis("Z", right_eyebrow_out_horizontal_movement_difference / 100)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    eyebrow_R_003.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                ################# LEFT EYEBROW #########################
-                # 22 27
-                left_eyebrow_in_current_vertical_movement = Point.get_vertical_distance(current_points[22], current_points[27])
-                left_eyebrow_in_previous_vertical_movement = Point.get_vertical_distance(previous_points[22], previous_points[27])
-                left_eyebrow_in_current_horizontal_movement = Point.get_horizontal_distance(current_points[22], current_points[27])
-                left_eyebrow_in_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[22], previous_points[27])
-                if left_eyebrow_in_current_vertical_movement != left_eyebrow_in_previous_vertical_movement:
-                    left_eyebrow_in_vertical_movement_difference = left_eyebrow_in_current_vertical_movement - left_eyebrow_in_previous_vertical_movement
-                    eyebrow_L_001.rotation_euler.rotate_axis("X", left_eyebrow_in_vertical_movement_difference / 100)
-                    rotated_flag = True
-
-                if left_eyebrow_in_current_horizontal_movement != left_eyebrow_in_previous_horizontal_movement:
-                    left_eyebrow_in_horizontal_movement_difference = left_eyebrow_in_current_horizontal_movement - left_eyebrow_in_previous_horizontal_movement
-                    eyebrow_L_001.rotation_euler.rotate_axis("Z", left_eyebrow_in_horizontal_movement_difference / 100)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    eyebrow_L_001.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                # 24 27
-                left_eyebrow_middle_current_vertical_movement = Point.get_vertical_distance(current_points[24], current_points[27])
-                left_eyebrow_middle_previous_vertical_movement = Point.get_vertical_distance(previous_points[24], previous_points[27])
-                left_eyebrow_middle_current_horizontal_movement = Point.get_horizontal_distance(current_points[24], current_points[27])
-                left_eyebrow_middle_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[24], previous_points[27])
-                if left_eyebrow_middle_current_vertical_movement != left_eyebrow_middle_previous_vertical_movement:
-                    left_eyebrow_middle_vertical_movement_difference = left_eyebrow_middle_current_vertical_movement - left_eyebrow_middle_previous_vertical_movement
-                    eyebrow_L_002.rotation_euler.rotate_axis("X", left_eyebrow_middle_vertical_movement_difference / 100)
-                    rotated_flag = True
-
-                if left_eyebrow_middle_current_horizontal_movement != left_eyebrow_middle_previous_horizontal_movement:
-                    left_eyebrow_middle_horizontal_movement_difference = left_eyebrow_middle_current_horizontal_movement - left_eyebrow_middle_previous_horizontal_movement
-                    eyebrow_L_002.rotation_euler.rotate_axis("Z", left_eyebrow_middle_horizontal_movement_difference / 100)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    eyebrow_L_002.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                # 26 27
-                left_eyebrow_out_current_vertical_movement = Point.get_vertical_distance(current_points[26], current_points[27])
-                left_eyebrow_out_previous_vertical_movement = Point.get_vertical_distance(previous_points[26], previous_points[27])
-                left_eyebrow_out_current_horizontal_movement = Point.get_horizontal_distance(current_points[26], current_points[27])
-                left_eyebrow_out_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[26], previous_points[27])
-                if left_eyebrow_out_current_vertical_movement != left_eyebrow_out_previous_vertical_movement:
-                    left_eyebrow_out_vertical_movement_difference = left_eyebrow_out_current_vertical_movement - left_eyebrow_out_previous_vertical_movement
-                    eyebrow_L_003.rotation_euler.rotate_axis("X", left_eyebrow_out_vertical_movement_difference / 100)
-                    rotated_flag = True
-
-                if left_eyebrow_out_current_horizontal_movement != left_eyebrow_out_previous_horizontal_movement:
-                    left_eyebrow_out_horizontal_movement_difference = left_eyebrow_out_current_horizontal_movement - left_eyebrow_out_previous_horizontal_movement
-                    eyebrow_L_003.rotation_euler.rotate_axis("Z", left_eyebrow_out_horizontal_movement_difference / 100)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    eyebrow_L_003.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                previous_frame = current_frame
-
                 ################# LIPS #########################
                 # 60 27
                 lips_right_side_current_horizontal_movement = Point.get_horizontal_distance(current_points[60], current_points[27])
@@ -236,43 +114,6 @@ class Controller:
                     lipside_L.keyframe_insert("rotation_euler")
                     rotated_flag = False
 
-                # 62 27
-                upper_lip_current_horizontal_movement = Point.get_horizontal_distance(current_points[62], current_points[27])
-                upper_lip_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[62], previous_points[27])
-                upper_lip_current_vertical_movement = Point.get_horizontal_distance(current_points[62], current_points[27])
-                upper_lip_previous_vertical_movement = Point.get_horizontal_distance(previous_points[62], previous_points[27])
-                if upper_lip_current_horizontal_movement != upper_lip_previous_horizontal_movement:
-                    upper_lip_horizontal_aperture_difference = upper_lip_current_horizontal_movement - upper_lip_previous_horizontal_movement
-                    ulip.rotation_euler.rotate_axis("Z", upper_lip_horizontal_aperture_difference / 10)
-                    rotated_flag = True
-
-                if upper_lip_current_vertical_movement != upper_lip_previous_vertical_movement:
-                    upper_lip_vertical_aperture_difference = upper_lip_current_vertical_movement - upper_lip_previous_vertical_movement
-                    ulip.rotation_euler.rotate_axis("X", upper_lip_vertical_aperture_difference / 10)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    ulip.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                # 66 27
-                lower_lip_current_horizontal_movement = Point.get_horizontal_distance(current_points[66], current_points[27])
-                lower_lip_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[66], previous_points[27])
-                lower_lip_current_vertical_movement = Point.get_horizontal_distance(current_points[66], current_points[27])
-                lower_lip_previous_vertical_movement = Point.get_horizontal_distance(previous_points[66], previous_points[27])
-                if lower_lip_current_horizontal_movement != lower_lip_previous_horizontal_movement:
-                    lower_lip_horizontal_aperture_difference = lower_lip_current_horizontal_movement - lower_lip_previous_horizontal_movement
-                    dlip.rotation_euler.rotate_axis("Z", lower_lip_horizontal_aperture_difference / 10)
-                    rotated_flag = True
-
-                if lower_lip_current_vertical_movement != lower_lip_previous_vertical_movement:
-                    lower_lip_vertical_aperture_difference = lower_lip_current_vertical_movement - lower_lip_previous_vertical_movement
-                    dlip.rotation_euler.rotate_axis("X", lower_lip_vertical_aperture_difference / 10)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    dlip.keyframe_insert("rotation_euler")
-                    rotated_flag = False
 
                 ################# NOSE #########################
                 # 34 27
@@ -297,6 +138,126 @@ class Controller:
             bpy.context.scene.frame_current += 1
             previous_frame = current_frame
 
+    def move_lips(self):
+        # upper and lower lip, points 62 and 66
+        self.ulip.rotation_euler.zero()
+        self.dlip.rotation_euler.zero()
+        upper_lip_end_limit = -7
+        upper_lip_start_limit = 5
+        lower_lip_end_limit = 20
+        lower_lip_start_limit = 0
+        upper_lip_point = 62
+        lower_lip_point = 66
+        aperture = Point.get_distance(
+            self.current_points[upper_lip_point],
+            self.current_points[lower_lip_point])
+        original_aperture = Point.get_distance(
+            self.data_container.initial.points[upper_lip_point],
+            self.data_container.initial.points[lower_lip_point])
+        upper_lip_rotation_angles = self.get_rotation_angles(upper_lip_end_limit, upper_lip_start_limit, aperture,
+                                                             original_aperture)
+        lower_lip_rotation_angles = self.get_rotation_angles(lower_lip_end_limit, lower_lip_start_limit, aperture,
+                                                             original_aperture)
+        self.ulip.rotation_euler.rotate_axis("X", math.radians(upper_lip_start_limit))
+        self.ulip.rotation_euler.rotate_axis("X", math.radians(upper_lip_rotation_angles))
+        self.dlip.rotation_euler.rotate_axis("X", math.radians(lower_lip_start_limit))
+        self.dlip.rotation_euler.rotate_axis("X", math.radians(lower_lip_rotation_angles))
+        self.ulip.keyframe_insert("rotation_euler")
+        self.dlip.keyframe_insert("rotation_euler")
+        # lip sides, points 60 and 64
+        self.lipside_R.rotation_euler.zero()
+        self.lipside_L.rotation_euler.zero()
+        right_side_lip_point = 60
+        left_side_lip_point = 64
+        right_side_lip_horizontal_end_limit = 10
+        right_side_lip_horizontal_start_limit = -10
+        left_side_lip_horizontal_end_limit = - right_side_lip_horizontal_end_limit
+        left_side_lip_horizontal_start_limit = - right_side_lip_horizontal_start_limit
+        self.move_single_point(right_side_lip_point, self.lipside_R, right_side_lip_horizontal_start_limit,
+                               right_side_lip_horizontal_end_limit, "Z")
+        self.move_single_point(left_side_lip_point, self.lipside_L, left_side_lip_horizontal_start_limit,
+                               left_side_lip_horizontal_end_limit, "Z")
+        side_lip_vertical_end_limit = -10
+        side_lip_vertical_start_limit = 10
+        self.move_single_point(right_side_lip_point, self.lipside_R, side_lip_vertical_start_limit,
+                               side_lip_vertical_end_limit, "X")
+        self.move_single_point(left_side_lip_point, self.lipside_L, side_lip_vertical_start_limit,
+                               side_lip_vertical_end_limit, "X")
+        self.lipside_R.keyframe_insert("rotation_euler")
+        self.lipside_L.keyframe_insert("rotation_euler")
+
+
+
+    def move_jaw(self):
+        # point 8
+        self.jaw.rotation_euler.zero()
+        jaw_end_limit = 10
+        jaw_start_limit = 0
+        self.move_single_point(8, self.jaw, jaw_start_limit, jaw_end_limit, "X", multiplier=10)
+        self.jaw.keyframe_insert("rotation_euler")
+
+    def move_eyebrows(self):
+        # right eyebrow, points 17, 19 and 21
+        self.move_single_eyebrow(21, 19, 17, self.eyebrow_R_001, self.eyebrow_R_002, self.eyebrow_R_003)
+        # left eyebrow, points 22, 25 and 26
+        self.move_single_eyebrow(22, 25, 26, self.eyebrow_L_001, self.eyebrow_L_002, self.eyebrow_L_003, mirror=True)
+
+    def move_single_eyebrow(self, inner_eyebrow_point, middle_eyebrow_point,
+                            outer_eyebrow_point, inner_eyebrow, middle_eyebrow, outer_eyebrow, mirror=False):
+        inner_eyebrow.rotation_euler.zero()
+        middle_eyebrow.rotation_euler.zero()
+        outer_eyebrow.rotation_euler.zero()
+        inner_eyebrow_vertical_end_limit = -4
+        inner_eyebrow_vertical_start_limit = 2
+        middle_eyebrow_vertical_end_limit = 4
+        middle_eyebrow_vertical_start_limit = -5
+        outer_eyebrow_vertical_end_limit = 4
+        outer_eyebrow_vertical_start_limit = -2
+        self.move_single_point(inner_eyebrow_point, inner_eyebrow,
+                               inner_eyebrow_vertical_start_limit, inner_eyebrow_vertical_end_limit, "X")
+        self.move_single_point(middle_eyebrow_point, middle_eyebrow,
+                               middle_eyebrow_vertical_start_limit, middle_eyebrow_vertical_end_limit, "X")
+        self.move_single_point(outer_eyebrow_point, outer_eyebrow,
+                               outer_eyebrow_vertical_start_limit, outer_eyebrow_vertical_end_limit, "X")
+        inner_eyebrow_horizontal_end_limit = 0
+        inner_eyebrow_horizontal_start_limit = -1
+        middle_eyebrow_horizontal_end_limit = -1
+        middle_eyebrow_horizontal_start_limit = 2
+        outer_eyebrow_horizontal_end_limit = -1
+        outer_eyebrow_horizontal_start_limit = 1
+        if mirror:
+            inner_eyebrow_horizontal_end_limit *= -1
+            inner_eyebrow_horizontal_start_limit *= -1
+            middle_eyebrow_horizontal_end_limit *= -1
+            middle_eyebrow_horizontal_start_limit *= -1
+            outer_eyebrow_horizontal_end_limit *= -1
+            outer_eyebrow_horizontal_start_limit *= -1
+
+        self.move_single_point(inner_eyebrow_point, inner_eyebrow,
+                               inner_eyebrow_horizontal_start_limit, inner_eyebrow_horizontal_end_limit, "Z")
+        self.move_single_point(middle_eyebrow_point, middle_eyebrow,
+                               middle_eyebrow_horizontal_start_limit, middle_eyebrow_horizontal_end_limit, "Z")
+        self.move_single_point(outer_eyebrow_point, outer_eyebrow,
+                               outer_eyebrow_horizontal_start_limit, outer_eyebrow_horizontal_end_limit, "Z")
+        inner_eyebrow.keyframe_insert("rotation_euler")
+        middle_eyebrow.keyframe_insert("rotation_euler")
+        outer_eyebrow.keyframe_insert("rotation_euler")
+
+    def move_single_point(self, point, bone, start_limit, end_limit, axis, multiplier=1):
+        current_distance = Point.get_vertical_distance(
+            self.current_points[self.reference_point],
+            self.current_points[point]) if axis == "X" else Point.get_horizontal_distance(
+            self.current_points[self.reference_point],
+            self.current_points[point])
+        initial_distance = Point.get_vertical_distance(
+            self.data_container.initial.points[self.reference_point],
+            self.data_container.initial.points[point]) if axis == "X" else Point.get_horizontal_distance(
+            self.data_container.initial.points[self.reference_point],
+            self.data_container.initial.points[point])
+        movement_angles = self.get_rotation_angles(end_limit, start_limit, current_distance, initial_distance)
+        bone.rotation_euler.rotate_axis(axis, math.radians(start_limit))
+        bone.rotation_euler.rotate_axis(axis, math.radians(movement_angles * multiplier))
+
     def move_eyes(self):
         # right eye, points 37 and 41
         self.move_single_eye(37, 41, self.ueyelid_R, self.deyelid_R)
@@ -304,27 +265,46 @@ class Controller:
         self.move_single_eye(44, 46, self.ueyelid_L, self.deyelid_L)
 
     def move_single_eye(self, upper_eyelid_point, lower_eyelid_point, upper_eyelid, lower_eyelid):
-        current_aperture = Point.get_vertical_distance(
+        aperture = Point.get_distance(
             self.current_points[upper_eyelid_point],
             self.current_points[lower_eyelid_point])
-        previous_aperture = Point.get_vertical_distance(
-            self.previous_points[upper_eyelid_point],
-            self.previous_points[lower_eyelid_point])
-        upper_eyelid_aperture_percentage = 0.7
-        lower_eyelid_aperture_percentage = 0.3
-        aperture_difference = current_aperture - previous_aperture
-        if self.is_significant_difference(aperture_difference):
-            upper_eyelid.rotation_euler.rotate_axis(
-                "X",
-                - aperture_difference * upper_eyelid_aperture_percentage / self.data_container.get_pixel_proportion())
-            upper_eyelid.keyframe_insert("rotation_euler")
-            lower_eyelid.rotation_euler.rotate_axis(
-                "X",
-                aperture_difference * lower_eyelid_aperture_percentage / self.data_container.get_pixel_proportion())
-            lower_eyelid.keyframe_insert("rotation_euler")
+        original_aperture = Point.get_distance(
+            self.data_container.initial.points[upper_eyelid_point],
+            self.data_container.initial.points[lower_eyelid_point])
+        upper_eyelid_end = -10
+        upper_eyelid_start = 30
+        lower_eyelid_end = 10
+        lower_eyelid_start = 0
+        upper_eyelid.rotation_euler.zero()
+        lower_eyelid.rotation_euler.zero()
+        upper_eyelid_rotation_angles = self.get_rotation_angles(upper_eyelid_end, upper_eyelid_start, aperture,
+                                                                original_aperture)
+        upper_eyelid.rotation_euler.rotate_axis("X", math.radians(upper_eyelid_start))
+        upper_eyelid.rotation_euler.rotate_axis("X", math.radians(upper_eyelid_rotation_angles))
+        lower_eyelid_rotation_angles = self.get_rotation_angles(lower_eyelid_end, lower_eyelid_start, aperture,
+                                                                original_aperture)
+        lower_eyelid.rotation_euler.rotate_axis("X", math.radians(lower_eyelid_start))
+        lower_eyelid.rotation_euler.rotate_axis("X", math.radians(lower_eyelid_rotation_angles))
+        upper_eyelid.keyframe_insert("rotation_euler")
+        lower_eyelid.keyframe_insert("rotation_euler")
 
-    def is_significant_difference(self, aperture_difference):
-        if aperture_difference != 0:# and aperture_difference > self.data_container.get_pixel_proportion() / 20:
-            return True
+    def get_movement_proportion(self, movement, initial_movement, negative_proportion_limit, positive_proportion_limit):
+        return min(positive_proportion_limit,
+                   max(movement / initial_movement, negative_proportion_limit)) - negative_proportion_limit
 
-        return False
+    def get_proportional_limits(self, start_limit, end_limit):
+        positive_proportion_limit = 1 + (end_limit / (end_limit - start_limit))
+        negative_proportion_limit = 1 + (start_limit / (end_limit - start_limit))
+        return positive_proportion_limit, negative_proportion_limit
+
+    def get_rotation_angles(self, end_limit, start_limit, movement, initial_movement):
+        direction = self.get_direction(end_limit, start_limit)
+        positive_proportion_limit, negative_proportion_limit = self.get_proportional_limits(start_limit, end_limit)
+        movement_proportion = self.get_movement_proportion(movement, initial_movement,
+                                                           negative_proportion_limit, positive_proportion_limit)
+        return (abs(start_limit - end_limit)) * movement_proportion * direction / (
+        abs(positive_proportion_limit - negative_proportion_limit))
+
+    def get_direction(self, end, start):
+        return -1 if end < start else 1
+

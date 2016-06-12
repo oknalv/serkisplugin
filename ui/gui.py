@@ -1,6 +1,6 @@
 import bpy
 
-from ..controller.controller2 import Controller
+from ..controller.controller import Controller
 
 
 class InputFields(bpy.types.PropertyGroup):
