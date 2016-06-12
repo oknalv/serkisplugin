@@ -49,6 +49,7 @@ class Controller:
         self.data_container = DataContainer()
         self.current_points = None
         self.previous_points = None
+        self.reference_point = 27
 
     def generate(self, file, fps=None):
         parser = sax.make_parser()
@@ -69,6 +70,7 @@ class Controller:
                 self.current_points = current_frame.points
                 self.previous_points = previous_frame.points
                 self.move_eyes()
+                self.move_eyebrows()
                 """
                 ################# JAW #########################
                 # 27 8 distance from nose to jaw
@@ -297,6 +299,37 @@ class Controller:
             bpy.context.scene.frame_current += 1
             previous_frame = current_frame
 
+    def move_eyebrows(self):
+        # right eyebrow, points 17, 19 and 21
+        self.move_single_eyebrow(21, 19, 17, self.eyebrow_R_001, self.eyebrow_R_002, self.eyebrow_R_003)
+        # left eyebrow, points 22, 25 and 26
+        self.move_single_eyebrow(22, 25, 26, self.eyebrow_L_001, self.eyebrow_L_002, self.eyebrow_L_003)
+
+    def move_single_eyebrow(self, inner_eyebrow_point, middle_eyebrow_point,
+                            outer_eyebrow_point, inner_eyebrow, middle_eyebrow, outer_eyebrow):
+        inner_eyebrow_vertical_end_limit = -4
+        inner_eyebrow_vertical_start_limit = 2
+        self.move_single_point(inner_eyebrow_point, inner_eyebrow,
+                               inner_eyebrow_vertical_start_limit, inner_eyebrow_vertical_end_limit)
+        middle_eyebrow_vertical_end_limit = -4
+        middle_eyebrow_vertical_start_limit = 2
+        self.move_single_point(middle_eyebrow_point, middle_eyebrow,
+                               middle_eyebrow_vertical_start_limit, middle_eyebrow_vertical_end_limit)
+        outer_eyebrow_vertical_end_limit = -4
+        outer_eyebrow_vertical_start_limit = 2
+        self.move_single_point(outer_eyebrow_point, outer_eyebrow,
+                               outer_eyebrow_vertical_start_limit, outer_eyebrow_vertical_end_limit)
+
+    def move_single_point(self, point, bone, vertical_start_limit, vertical_end_limit):
+        bone.rotation_euler.zero()
+        current_vertical_distance = Point.get_vertical_distance(
+            self.current_points[self.reference_point],
+            self.current_points[point])
+        initial_vertical_distance = Point.get_vertical_distance(
+            self.data_container.initial.points[self.reference_point],
+            self.data_container.initial.points[point])
+        # vertical_movement_angles =
+
     def move_eyes(self):
         # right eye, points 37 and 41
         self.move_single_eye(37, 41, self.ueyelid_R, self.deyelid_R)
@@ -307,8 +340,6 @@ class Controller:
         aperture = Point.get_distance(
             self.current_points[upper_eyelid_point],
             self.current_points[lower_eyelid_point])
-        upper_eyelid.rotation_euler.zero()
-        lower_eyelid.rotation_euler.zero()
         original_aperture = Point.get_distance(
             self.data_container.initial.points[upper_eyelid_point],
             self.data_container.initial.points[lower_eyelid_point])
@@ -316,26 +347,36 @@ class Controller:
         upper_eyelid_start = 30
         lower_eyelid_end = 10
         lower_eyelid_start = 0
-        full_open_proportion = 1.25
-        full_close_proportion = 0.25
-        aperture_proportion = min(full_open_proportion, max(aperture / original_aperture, full_close_proportion)) - full_close_proportion
-        upper_eyelid_direction = -1 if upper_eyelid_end < upper_eyelid_start else 1
-        lower_eyelid_direction = -1 if lower_eyelid_end < lower_eyelid_start else 1
-        upper_eyelid_rotation_angles = (abs(upper_eyelid_start - upper_eyelid_end)) * aperture_proportion * upper_eyelid_direction / (abs(full_open_proportion - full_close_proportion))
-        upper_eyelid.rotation_euler.rotate_axis(
-            "X",
-            math.radians(upper_eyelid_start))
-        upper_eyelid.rotation_euler.rotate_axis(
-            "X",
-            math.radians(upper_eyelid_rotation_angles))
-        print(abs(lower_eyelid_start - lower_eyelid_end))
-        lower_eyelid_rotation_angles = (abs(lower_eyelid_start - lower_eyelid_end)) * aperture_proportion * lower_eyelid_direction / (abs(full_open_proportion - full_close_proportion))
-        lower_eyelid.rotation_euler.rotate_axis(
-            "X",
-            math.radians(lower_eyelid_start))
-        lower_eyelid.rotation_euler.rotate_axis(
-            "X",
-            math.radians(lower_eyelid_rotation_angles))
+        upper_eyelid.rotation_euler.zero()
+        lower_eyelid.rotation_euler.zero()
+        upper_eyelid_rotation_angles = self.get_rotation_angles(upper_eyelid_end, upper_eyelid_start, aperture,
+                                                                original_aperture)
+        upper_eyelid.rotation_euler.rotate_axis("X", math.radians(upper_eyelid_start))
+        upper_eyelid.rotation_euler.rotate_axis("X", math.radians(upper_eyelid_rotation_angles))
+        lower_eyelid_rotation_angles = self.get_rotation_angles(lower_eyelid_end, lower_eyelid_start, aperture,
+                                                                original_aperture)
+        lower_eyelid.rotation_euler.rotate_axis("X", math.radians(lower_eyelid_start))
+        lower_eyelid.rotation_euler.rotate_axis("X", math.radians(lower_eyelid_rotation_angles))
         upper_eyelid.keyframe_insert("rotation_euler")
         lower_eyelid.keyframe_insert("rotation_euler")
+
+    def get_movement_proportion(self, movement, initial_movement, negative_proportion_limit, positive_proportion_limit):
+        return min(positive_proportion_limit,
+                   max(movement / initial_movement, negative_proportion_limit)) - negative_proportion_limit
+
+    def get_proportional_limits(self, start_limit, end_limit):
+        positive_proportion_limit = 1 + (end_limit / (end_limit - start_limit))
+        negative_proportion_limit = 1 + (start_limit / (end_limit - start_limit))
+        return positive_proportion_limit, negative_proportion_limit
+
+    def get_rotation_angles(self, end_limit, start_limit, movement, initial_movement):
+        direction = self.get_direction(end_limit, start_limit)
+        positive_proportion_limit, negative_proportion_limit = self.get_proportional_limits(start_limit, end_limit)
+        movement_proportion = self.get_movement_proportion(movement, initial_movement,
+                                                           negative_proportion_limit, positive_proportion_limit)
+        return (abs(start_limit - end_limit)) * movement_proportion * direction / (
+        abs(positive_proportion_limit - negative_proportion_limit))
+
+    def get_direction(self, end, start):
+        return -1 if end < start else 1
 
