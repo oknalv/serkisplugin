@@ -1,5 +1,6 @@
 from xml import sax as sax
 import bpy
+import math
 
 from ..lib.datacontainer import DataContainer
 from ..lib.datacontainer import Point
@@ -67,17 +68,16 @@ class Controller:
             if current_frame.points:
                 self.current_points = current_frame.points
                 self.previous_points = previous_frame.points
-
                 self.move_eyes()
                 """
                 ################# JAW #########################
                 # 27 8 distance from nose to jaw
-                jaw_current_aperture = Point.get_vertical_distance(current_points[27], current_points[8])
-                jaw_previous_aperture = Point.get_vertical_distance(previous_points[27], previous_points[8])
+                jaw_current_aperture = Point.get_vertical_distance(self.current_points[27], self.current_points[8])
+                jaw_previous_aperture = Point.get_vertical_distance(self.previous_points[27], self.previous_points[8])
                 if jaw_current_aperture != jaw_previous_aperture:
                     jaw_aperture_difference = jaw_current_aperture - jaw_previous_aperture
-                    jaw.rotation_euler.rotate_axis("X", jaw_aperture_difference / 100)
-                    jaw.keyframe_insert("rotation_euler")
+                    self.jaw.rotation_euler.rotate_axis("X", jaw_aperture_difference / 100)
+                    self.jaw.keyframe_insert("rotation_euler")
 
                 ################# RIGHT EYEBROW #########################
                 # 21 27
@@ -304,27 +304,38 @@ class Controller:
         self.move_single_eye(44, 46, self.ueyelid_L, self.deyelid_L)
 
     def move_single_eye(self, upper_eyelid_point, lower_eyelid_point, upper_eyelid, lower_eyelid):
-        current_aperture = Point.get_vertical_distance(
+        aperture = Point.get_distance(
             self.current_points[upper_eyelid_point],
             self.current_points[lower_eyelid_point])
-        previous_aperture = Point.get_vertical_distance(
-            self.previous_points[upper_eyelid_point],
-            self.previous_points[lower_eyelid_point])
-        upper_eyelid_aperture_percentage = 0.7
-        lower_eyelid_aperture_percentage = 0.3
-        aperture_difference = current_aperture - previous_aperture
-        if self.is_significant_difference(aperture_difference):
-            upper_eyelid.rotation_euler.rotate_axis(
-                "X",
-                - aperture_difference * upper_eyelid_aperture_percentage / self.data_container.get_pixel_proportion())
-            upper_eyelid.keyframe_insert("rotation_euler")
-            lower_eyelid.rotation_euler.rotate_axis(
-                "X",
-                aperture_difference * lower_eyelid_aperture_percentage / self.data_container.get_pixel_proportion())
-            lower_eyelid.keyframe_insert("rotation_euler")
+        upper_eyelid.rotation_euler.zero()
+        lower_eyelid.rotation_euler.zero()
+        original_aperture = Point.get_distance(
+            self.data_container.initial.points[upper_eyelid_point],
+            self.data_container.initial.points[lower_eyelid_point])
+        upper_eyelid_end = -10
+        upper_eyelid_start = 30
+        lower_eyelid_end = 10
+        lower_eyelid_start = 0
+        full_open_proportion = 1.25
+        full_close_proportion = 0.25
+        aperture_proportion = min(full_open_proportion, max(aperture / original_aperture, full_close_proportion)) - full_close_proportion
+        upper_eyelid_direction = -1 if upper_eyelid_end < upper_eyelid_start else 1
+        lower_eyelid_direction = -1 if lower_eyelid_end < lower_eyelid_start else 1
+        upper_eyelid_rotation_angles = (abs(upper_eyelid_start - upper_eyelid_end)) * aperture_proportion * upper_eyelid_direction / (abs(full_open_proportion - full_close_proportion))
+        upper_eyelid.rotation_euler.rotate_axis(
+            "X",
+            math.radians(upper_eyelid_start))
+        upper_eyelid.rotation_euler.rotate_axis(
+            "X",
+            math.radians(upper_eyelid_rotation_angles))
+        print(abs(lower_eyelid_start - lower_eyelid_end))
+        lower_eyelid_rotation_angles = (abs(lower_eyelid_start - lower_eyelid_end)) * aperture_proportion * lower_eyelid_direction / (abs(full_open_proportion - full_close_proportion))
+        lower_eyelid.rotation_euler.rotate_axis(
+            "X",
+            math.radians(lower_eyelid_start))
+        lower_eyelid.rotation_euler.rotate_axis(
+            "X",
+            math.radians(lower_eyelid_rotation_angles))
+        upper_eyelid.keyframe_insert("rotation_euler")
+        lower_eyelid.keyframe_insert("rotation_euler")
 
-    def is_significant_difference(self, aperture_difference):
-        if aperture_difference != 0:# and aperture_difference > self.data_container.get_pixel_proportion() / 20:
-            return True
-
-        return False

@@ -1,6 +1,6 @@
 import bpy
 
-from ..controller.controller import generate
+from ..controller.controller2 import Controller
 
 
 class InputFields(bpy.types.PropertyGroup):
@@ -44,7 +44,8 @@ class GenerateAnimationButton(bpy.types.Operator):
         if "ManualFPS" in fields.keys() and fields["ManualFPS"] and "FPS" in fields.keys():
             fps = fields["FPS"]
 
-        generate(bpy.path.abspath(file), fps)
+        controller = Controller()
+        controller.generate(bpy.path.abspath(file), fps)
 
         return {'FINISHED'}
 
