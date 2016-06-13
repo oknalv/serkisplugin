@@ -7,6 +7,7 @@ class InputFields(bpy.types.PropertyGroup):
     InputFileName = bpy.props.StringProperty(name="", subtype="FILE_PATH", default="")
     FPS = bpy.props.FloatProperty(name="FPS", default=0.0, options={'HIDDEN'})
     ManualFPS = bpy.props.BoolProperty(name="Set FPS manually", default=False)
+    Jitter = bpy.props.IntProperty(name="Strength", default=0)
 
 
 class SerkisPanel(bpy.types.Panel):
@@ -27,7 +28,10 @@ class SerkisPanel(bpy.types.Panel):
         row1 = box1.row()
         row1.prop(context.scene.fields, "FPS")
         col2 = layout.column(align=True)
-        col2.operator("animation.generate_animation", text="Generate")
+        col2.label("Anti-jitter filter:")
+        col2.prop(context.scene.fields, "Jitter")
+        col3 = layout.column(align=True)
+        col3.operator("animation.generate_animation", text="Generate")
 
 
 class GenerateAnimationButton(bpy.types.Operator):
@@ -43,9 +47,11 @@ class GenerateAnimationButton(bpy.types.Operator):
         fps = None
         if "ManualFPS" in fields.keys() and fields["ManualFPS"] and "FPS" in fields.keys():
             fps = fields["FPS"]
-
+        jitter = 0
+        if "Jitter" in fields.keys():
+            jitter = fields["Jitter"]
         controller = Controller()
-        controller.generate(bpy.path.abspath(file), fps)
+        controller.generate(bpy.path.abspath(file), jitter, fps)
 
         return {'FINISHED'}
 

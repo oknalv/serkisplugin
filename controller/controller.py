@@ -4,6 +4,7 @@ import math
 
 from ..lib.datacontainer import DataContainer
 from ..lib.datacontainer import Point
+from ..lib.jitterfilter import filter as jitterfilter
 from ..lib.keypointhandler import KeypointHandler
 
 class Controller:
@@ -48,10 +49,9 @@ class Controller:
         self.dlip.rotation_mode = "XYZ"
         self.data_container = DataContainer()
         self.current_points = None
-        self.previous_points = None
         self.reference_point = 27
 
-    def generate(self, file, fps=None):
+    def generate(self, file, jitter=0, fps=None):
         parser = sax.make_parser()
         parser.setContentHandler(KeypointHandler(self.data_container))
         parser.parse(open(file, "rU"))
@@ -59,84 +59,20 @@ class Controller:
             fps = self.data_container.fps
 
         bpy.context.scene.render.fps = fps
-        previous_frame = self.data_container.initial
-        # rotated_flag = False
-
         bpy.context.scene.frame_current = 0
         bpy.context.scene.frame_end = len(self.data_container.frames)
-
-        for current_frame in self.data_container.frames:
+        self.data_container = jitterfilter(self.data_container, jitter)
+        for i, current_frame in enumerate(self.data_container.frames):
+            if current_frame is None:
+                print(i)
             if current_frame.points:
                 self.current_points = current_frame.points
-                self.previous_points = previous_frame.points
                 self.move_eyes()
                 self.move_eyebrows()
                 self.move_jaw()
                 self.move_lips()
 
-                """
-                ################# LIPS #########################
-                # 60 27
-                lips_right_side_current_horizontal_movement = Point.get_horizontal_distance(current_points[60], current_points[27])
-                lips_right_side_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[60], previous_points[27])
-                lips_right_side_current_vertical_movement = Point.get_horizontal_distance(current_points[60], current_points[27])
-                lips_right_side_previous_vertical_movement = Point.get_horizontal_distance(previous_points[60], previous_points[27])
-                if lips_right_side_current_horizontal_movement != lips_right_side_previous_horizontal_movement:
-                    lips_right_side_horizontal_aperture_difference = lips_right_side_current_horizontal_movement - lips_right_side_previous_horizontal_movement
-                    lipside_R.rotation_euler.rotate_axis("Z", lips_right_side_horizontal_aperture_difference / 10)
-                    rotated_flag = True
-
-                if lips_right_side_current_vertical_movement != lips_right_side_previous_vertical_movement:
-                    lips_right_side_vertical_aperture_difference = lips_right_side_current_vertical_movement - lips_right_side_previous_vertical_movement
-                    lipside_R.rotation_euler.rotate_axis("X", lips_right_side_vertical_aperture_difference / 10)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    lipside_R.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-                # 64 27
-                lips_left_side_current_horizontal_movement = Point.get_horizontal_distance(current_points[64], current_points[27])
-                lips_left_side_previous_horizontal_movement = Point.get_horizontal_distance(previous_points[64], previous_points[27])
-                lips_left_side_current_vertical_movement = Point.get_horizontal_distance(current_points[64], current_points[27])
-                lips_left_side_previous_vertical_movement = Point.get_horizontal_distance(previous_points[64], previous_points[27])
-                if lips_left_side_current_horizontal_movement != lips_left_side_previous_horizontal_movement:
-                    lips_left_side_horizontal_aperture_difference = lips_left_side_current_horizontal_movement - lips_left_side_previous_horizontal_movement
-                    lipside_L.rotation_euler.rotate_axis("Z", lips_left_side_horizontal_aperture_difference / 10)
-                    rotated_flag = True
-
-                if lips_left_side_current_vertical_movement != lips_left_side_previous_vertical_movement:
-                    lips_left_side_vertical_aperture_difference = lips_left_side_current_vertical_movement - lips_left_side_previous_vertical_movement
-                    lipside_L.rotation_euler.rotate_axis("X", lips_left_side_vertical_aperture_difference / 10)
-                    rotated_flag = True
-
-                if rotated_flag:
-                    lipside_L.keyframe_insert("rotation_euler")
-                    rotated_flag = False
-
-
-                ################# NOSE #########################
-                # 34 27
-                nose_current_rotation = Point.get_horizontal_distance(current_points[34], current_points[27])
-                nose_previous_rotation = Point.get_horizontal_distance(previous_points[34], previous_points[27])
-                if nose_current_rotation != nose_previous_rotation:
-                    nose_rotation_difference = nose_current_rotation - nose_previous_rotation
-                    nose.rotation_euler.rotate_axis("Z", nose_rotation_difference / 10)
-                    nose.keyframe_insert("rotation_euler")
-
-                # 31 35
-                nostrils_current_distance = Point.get_horizontal_distance(current_points[31], current_points[21])
-                nostrils_previous_distance = Point.get_horizontal_distance(previous_points[34], previous_points[27])
-                if nostrils_current_distance != nostrils_previous_distance:
-                    nostrils_distance_difference = nostrils_current_distance - nostrils_previous_distance
-                    nostril_L.rotation_euler.rotate_axis("Y", nostrils_distance_difference / 20)
-                    nostril_L.keyframe_insert("rotation_euler")
-                    nostril_R.rotation_euler.rotate_axis("Y", - nostrils_distance_difference / 20)
-                    nostril_R.keyframe_insert("rotation_euler")
-                """
-
             bpy.context.scene.frame_current += 1
-            previous_frame = current_frame
 
     def move_lips(self):
         # upper and lower lip, points 62 and 66

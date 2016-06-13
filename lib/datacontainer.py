@@ -19,12 +19,14 @@ class DataContainer:
 
         return self.initial
 
+    """
     def get_pixel_proportion(self):
         #27 28
         if self.pixel_proportion is None:
             self.pixel_proportion = Point.get_distance(self.initial.points[27], self.initial.points[28])
 
-        return self.pixel_proportion
+        return self.pixel_proportion"""
+
 
 class FrameContainer:
 
