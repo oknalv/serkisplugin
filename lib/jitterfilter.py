@@ -1,5 +1,6 @@
 from .datacontainer import DataContainer
 
+
 def filter(datacontainer, value):
     value = int(value)
     datacontainer_frames_len = len(datacontainer.frames)

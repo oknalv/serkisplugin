@@ -2,7 +2,6 @@ from xml.sax import ContentHandler
 
 
 class KeypointHandler(ContentHandler):
-
     def __init__(self, datacontainer):
         self.datacontainer = datacontainer
         self.is_initial = False

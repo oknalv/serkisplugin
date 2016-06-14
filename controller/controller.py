@@ -7,8 +7,8 @@ from ..lib.datacontainer import Point
 from ..lib.jitterfilter import filter as jitterfilter
 from ..lib.keypointhandler import KeypointHandler
 
-class Controller:
 
+class Controller:
     def __init__(self):
         armature = bpy.data.objects["Armature"]
         self.ueyelid_R = armature.pose.bones["ueyelid_R"]
@@ -63,8 +63,6 @@ class Controller:
         bpy.context.scene.frame_end = len(self.data_container.frames)
         self.data_container = jitterfilter(self.data_container, jitter)
         for i, current_frame in enumerate(self.data_container.frames):
-            if current_frame is None:
-                print(i)
             if current_frame.points:
                 self.current_points = current_frame.points
                 self.move_eyes()

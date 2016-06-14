@@ -17,7 +17,6 @@ class SerkisPanel(bpy.types.Panel):
     bl_category = "Serkis"
     bl_label = "Generate animation"
 
-
     def draw(self, context):
         layout = self.layout
         col1 = layout.column(align=True)

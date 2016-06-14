@@ -1,7 +1,7 @@
 import math
 
-class DataContainer:
 
+class DataContainer:
     def __init__(self):
         self.frames = []
         self.fps = None
@@ -19,17 +19,8 @@ class DataContainer:
 
         return self.initial
 
-    """
-    def get_pixel_proportion(self):
-        #27 28
-        if self.pixel_proportion is None:
-            self.pixel_proportion = Point.get_distance(self.initial.points[27], self.initial.points[28])
-
-        return self.pixel_proportion"""
-
 
 class FrameContainer:
-
     def __init__(self):
         self.points = []
 
@@ -38,7 +29,6 @@ class FrameContainer:
 
 
 class Point:
-
     def __init__(self, x, y):
         self.x = x
         self.y = y
