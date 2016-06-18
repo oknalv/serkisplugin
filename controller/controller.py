@@ -21,12 +21,6 @@ class Controller:
         self.deyelid_L.rotation_mode = "XYZ"
         self.jaw = armature.pose.bones["jaw"]
         self.jaw.rotation_mode = "XYZ"
-        self.nose = armature.pose.bones["nose"]
-        self.nose.rotation_mode = "XYZ"
-        self.nostril_R = armature.pose.bones["nostril_R"]
-        self.nostril_R.rotation_mode = "XYZ"
-        self.nostril_L = armature.pose.bones["nostril_L"]
-        self.nostril_L.rotation_mode = "XYZ"
         self.eyebrow_L_001 = armature.pose.bones["eyebrow_L.001"]
         self.eyebrow_L_001.rotation_mode = "XYZ"
         self.eyebrow_L_002 = armature.pose.bones["eyebrow_L.002"]
