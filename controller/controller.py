@@ -4,7 +4,7 @@ import math
 
 from ..lib.datacontainer import DataContainer
 from ..lib.datacontainer import Point
-from ..lib.jitterfilter import filter as jitterfilter
+from ..lib.jitterfilter import AntiJitterFilter
 from ..lib.keypointhandler import KeypointHandler
 
 
@@ -55,7 +55,7 @@ class Controller:
         bpy.context.scene.render.fps = fps
         bpy.context.scene.frame_current = 0
         bpy.context.scene.frame_end = len(self.data_container.frames)
-        self.data_container = jitterfilter(self.data_container, jitter)
+        self.data_container = AntiJitterFilter.filter(self.data_container, jitter)
         for i, current_frame in enumerate(self.data_container.frames):
             if current_frame.points:
                 self.current_points = current_frame.points
