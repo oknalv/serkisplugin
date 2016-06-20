@@ -4,7 +4,7 @@ import math
 
 from ..lib.datacontainer import DataContainer
 from ..lib.datacontainer import Point
-from ..lib.jitterfilter import filter as jitterfilter
+from ..lib.jitterfilter import AntiJitterFilter
 from ..lib.keypointhandler import KeypointHandler
 
 
@@ -21,12 +21,6 @@ class Controller:
         self.deyelid_L.rotation_mode = "XYZ"
         self.jaw = armature.pose.bones["jaw"]
         self.jaw.rotation_mode = "XYZ"
-        self.nose = armature.pose.bones["nose"]
-        self.nose.rotation_mode = "XYZ"
-        self.nostril_R = armature.pose.bones["nostril_R"]
-        self.nostril_R.rotation_mode = "XYZ"
-        self.nostril_L = armature.pose.bones["nostril_L"]
-        self.nostril_L.rotation_mode = "XYZ"
         self.eyebrow_L_001 = armature.pose.bones["eyebrow_L.001"]
         self.eyebrow_L_001.rotation_mode = "XYZ"
         self.eyebrow_L_002 = armature.pose.bones["eyebrow_L.002"]
@@ -61,7 +55,7 @@ class Controller:
         bpy.context.scene.render.fps = fps
         bpy.context.scene.frame_current = 0
         bpy.context.scene.frame_end = len(self.data_container.frames)
-        self.data_container = jitterfilter(self.data_container, jitter)
+        self.data_container = AntiJitterFilter.filter(self.data_container, jitter)
         for i, current_frame in enumerate(self.data_container.frames):
             if current_frame.points:
                 self.current_points = current_frame.points

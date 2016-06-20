@@ -6,7 +6,6 @@ class DataContainer:
         self.frames = []
         self.fps = None
         self.initial = None
-        self.pixel_proportion = None
 
     def add_frame(self):
         frame = FrameContainer()
