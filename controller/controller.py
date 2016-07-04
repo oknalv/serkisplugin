@@ -218,7 +218,8 @@ class Controller:
 
     def get_movement_proportion(self, movement, initial_movement, negative_proportion_limit, positive_proportion_limit):
         return min(positive_proportion_limit,
-                   max(movement / initial_movement, negative_proportion_limit)) - negative_proportion_limit
+                   max(movement / initial_movement if initial_movement != 0 else 0.0000001,
+                       negative_proportion_limit)) - negative_proportion_limit
 
     def get_proportional_limits(self, start_limit, end_limit):
         positive_proportion_limit = 1 + (end_limit / (end_limit - start_limit))
